@@ -33,6 +33,7 @@
 ### 安装
 ```javascript
     npm install 
+    bower install
 ```
 
 
