@@ -1,0 +1,4 @@
+{
+	"directory注释" : ".bowerrc:当使用bower install bootstrap时，会查找该文件，然后将原bower_componnets的文件安装到指定目录下",
+	"directory" : "public/libs" 
+}
