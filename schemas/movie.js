@@ -24,7 +24,7 @@ var MovieSchema = new mongoose.Schema({
 
 // pre方法：每次save数据之前都会调用这个方法
 MovieSchema.pre('save', function(next){
-	console.log('pre save======')
+	
 	// 判断数据是否新加的
 	if(this.isNew) {
 		this.meta.createAt = this.meta.updateAt = Date.now();

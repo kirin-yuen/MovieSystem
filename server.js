@@ -3,6 +3,7 @@ var path = require('path');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var Movie = require('./models/movie');
+var User = require('./models/user');
 var _ = require('underscore');
 
 var app = express();
@@ -27,7 +28,7 @@ mongoose.connect('mongodb://localhost/imooc');
 // 可通过命令行PORT=4000配置端口,process.env.PORT这样的值就是4000
 var port = process.env.PORT || 3000;
 
-console.log(process.env.PORT)
+console.log('环境变量配置的端口:' + process.env.PORT);
 
 // 首页
 app.get('/', function (req, res) {
@@ -106,6 +107,7 @@ app.get('/admin/update/:id', function(req, res){
 app.post('/admin/movie/new', function(req, res){
 	var id = req.body.movie._id;	
 
+	// 使用body-parser后，将body后的内容转换成一个对象
 	var moviePost = req.body.movie;
 	var _movie;
 	// 判断从后台录入页post过来数据是新增的还是更新
@@ -161,6 +163,45 @@ app.delete('/admin/list', function(req, res){
 			})
 		})
 	}
+});
+
+
+// POST注册处理
+app.post('/user/signup', function(req, res){
+	var user = req.body.user;
+	console.log(user.name)
+	// 如果存在名字相同的，就跳去路由/
+	User.find({ name : user.name}, function(err, user){
+		console.log(user.length == 0)
+		if(err) console.error(err);
+		// ============
+		if(user.length == 0){
+			return res.redirect('/');
+		} else {
+			var _user = new User(user);
+
+			_user.save(function(err, user){
+				if (err) console.error(err);
+
+				res.redirect('/admin/userlist');
+			});
+		}
+	});
+
+	
+});
+
+// 用户列表页
+app.get('/admin/userlist', function (req, res) {
+
+	User.fetch(function(err, users){
+		if(err) console.log(err);
+
+		res.render('pages/userlist', {
+			title: '用户列表页',
+			users: users
+		});
+	});	
 });
 
 // 端口留空，则会随机分配一个端口

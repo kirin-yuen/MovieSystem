@@ -3,3 +3,46 @@
 		.page-header
 			h1= title
 			small 重度科幻迷
+.navbar.navbar-default.navbar-fixed-bottom
+	.container
+		.navbar-header
+			a.navbar-brand(href="/") 重度科幻迷
+		p.navbar-text.navbar-right
+			a.navbar-link(href="#", data-toggle="modal", data-target="#signupModal") 注册
+			span &nbsp;
+			a.navbar-link(href="#", data-toggle="modal", data-target="#signinModal") 登陆
+
+//- 注册框
+#signupModal.modal.fade.in
+	.modal-dialog
+		.modal-content
+			form(method="post", action="/user/signup")
+				.modal-header 注册
+				.modal-body
+					.form-group
+						label(for="signupName") 用户名
+						input#signupName.form-control(name="user[name]", type="text")
+					.form-group
+						label(for="signupPassword") 密码
+						//- 此处name值有2种写法：password，user[password],对应在post方法中的获取方式也不同
+						input#signupPassword.form-control(name="user[password]", type="password")
+				.modal-footer
+					button.btn.btn-danger(type="button", data-dismiss="modal") 关闭
+					button.btn.btn-primary(type="submit") 提交
+
+//- 登陆框
+#signinModal.modal.fade
+	.modal-dialog
+		.modal-content
+			form(method="post", action="/user/signin")
+				.modal-header 登陆
+				.modal-body
+					.form-group
+						label(for="signinName") 用户名
+						input#signinName.form-control(name="user[name]", type="text")
+					.form-group
+						label(for="signinPassword") 密码
+						input#signinPassword.form-control(name="user[password]", type="password")
+				.modal-footer
+					button.btn.btn-danger(type="button", data-dismiss="modal") 关闭
+					button.btn.btn-primary(type="submit") 提交
