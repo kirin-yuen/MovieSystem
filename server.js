@@ -168,17 +168,17 @@ app.delete('/admin/list', function(req, res){
 
 // POST注册处理
 app.post('/user/signup', function(req, res){
-	var user = req.body.user;
-	console.log(user.name)
+	var reqUser = req.body.user;
+	
 	// 如果存在名字相同的，就跳去路由/
-	User.find({ name : user.name}, function(err, user){
-		console.log(user.length == 0)
+	User.find({ name : reqUser.name}, function(err, user){
+		
 		if(err) console.error(err);
-		// ============
-		if(user.length == 0){
+		
+		if(user.length != 0){
 			return res.redirect('/');
 		} else {
-			var _user = new User(user);
+			var _user = new User(reqUser);
 
 			_user.save(function(err, user){
 				if (err) console.error(err);
