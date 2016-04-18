@@ -1,10 +1,17 @@
 var express = require('express');
 var path = require('path');
 var mongoose = require('mongoose');
+var session = require('express-session');
+
+// 初始化store对象
+var MongoStore = require('connect-mongo')(session);
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
 var Movie = require('./models/movie');
 var User = require('./models/user');
 var _ = require('underscore');
+
+var dbUrl = 'mongodb://localhost/imooc';
 
 var app = express();
 // 设置模板引擎为jade
@@ -15,6 +22,17 @@ app.set('view engine', 'jade');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(bodyParser.json());
 
+// 引入cookieParser,session才能正常运作
+app.use(cookieParser());
+// 利用 mongodb 做会话的持久化
+app.use(session({
+	secret : 'immoc',
+	store : new MongoStore({
+		url : dbUrl,
+		collection : 'sessions'
+	})
+}));
+
 // 将moment添加到locals中，让jade模板能直接使用
 app.locals.moment = require('moment');
 
@@ -22,7 +40,7 @@ app.locals.moment = require('moment');
 app.use(express.static(path.join(__dirname, 'public')));
 
 // 连接本地数据库imooc
-mongoose.connect('mongodb://localhost/imooc');
+mongoose.connect(dbUrl);
 
 // process.env.PORT是当前环境变量配置的端口
 // 可通过命令行PORT=4000配置端口,process.env.PORT这样的值就是4000
@@ -33,6 +51,16 @@ console.log('环境变量配置的端口:' + process.env.PORT);
 // 首页
 app.get('/', function (req, res) {
 
+	var user = req.session.user;
+
+	// 将user放在app.locals中，让所有模板都能使用该变量
+	app.locals.user = user;
+
+	console.log('session in');
+	console.log(user);
+	console.log('locals');
+	console.log(app.locals.user);
+	
 	// 获取schemas中exec前返回的结果，传递给movies
 	Movie.fetch(function(err, movies){
 		if(err) console.error(err);
@@ -187,8 +215,47 @@ app.post('/user/signup', function(req, res){
 			});
 		}
 	});
+});
 
+
+// POST登陆处理
+app.post('/user/signin', function(req, res){
+	var reqUser = req.body.user;
 	
+	User.findOne({name : reqUser.name}, function(err, user){
+		if(err) console.error(err);
+		
+		if(!user) {
+			console.log('user is not exist');
+			return res.redirect('/');
+		} 
+
+		// UserSchemas的实例方法，会在Schemas中定义
+		user.comparePassword(reqUser.password, function(err, isMatch){
+			if(err) console.error(err);
+
+			if(isMatch){
+				// 设置session
+				req.session.user = user;
+				console.log('is match!');
+				res.redirect('/');
+			} else{
+
+				console.log('not match!');
+				res.redirect('/');
+			}
+		});
+		
+	});
+});
+
+// 登出操作
+app.get('/user/logout', function(req, res){
+	// 删除session和全局变量locals中的user
+	delete req.session.user;
+	// delete app.locals.user; // no need to delete?
+
+	res.redirect('/');
 });
 
 // 用户列表页
@@ -203,6 +270,8 @@ app.get('/admin/userlist', function (req, res) {
 		});
 	});	
 });
+
+
 
 // 端口留空，则会随机分配一个端口
 app.listen(port);

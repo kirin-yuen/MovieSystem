@@ -69,5 +69,16 @@ UserSchema.statics = {
 	}
 };
 
+// 定义UserSchemas的实例方法
+UserSchema.methods = {
+	comparePassword : function(password, cb){
+		bcrypt.compare(password, this.password, function(err, isMatch){
+			if(err) return cb(err, null);
+			
+			cb(null, isMatch);
+		})
+	}
+}
+
 // 将模式导出
 module.exports = UserSchema
