@@ -90,3 +90,33 @@ exports.showSignin = function(req, res) {
 		title: '登陆页'
 	});
 };
+
+
+// 登陆验证中间件
+exports.signinRequired = function(req, res, next) {
+
+	var user = req.session.user;
+
+	if(!user) {
+		console.log('=====user not exist');
+		return res.redirect('/signin');		
+	}
+
+	console.log('=====user exist');
+	next();
+};
+
+
+// 权限验证中间件
+exports.adminRoleRequired = function(req, res, next) {
+
+	var user = req.session.user;
+
+	if(user.role < 10) {		
+		console.log('=====user role < 10');
+		return res.redirect('/');
+	} 
+
+	console.log('=====user role > 10');
+	next();
+};

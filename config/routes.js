@@ -20,17 +20,19 @@ module.exports = function(app){
 
 	// 电影
 	app.get('/movie/:id', Movie.detail);
-	app.get('/admin/movie', Movie.create);
-	app.get('/admin/list', Movie.list);
-	app.get('/admin/update/:id', Movie.update);
-	app.post('/admin/movie/new', Movie.save);
-	app.delete('/admin/list', Movie.delete);
+	app.get('/admin/movie', User.signinRequired, User.adminRoleRequired, Movie.create);
+	// 加入中间件User.signinRequired, User.adminRoleRequired,，路由方法会按顺序跑每一个中间件
+	app.get('/admin/movie/list', User.signinRequired, User.adminRoleRequired, Movie.list);
+	app.get('/admin/movie/update/:id', User.signinRequired, User.adminRoleRequired, Movie.update);
+	app.post('/admin/movie/new', User.signinRequired, User.adminRoleRequired, Movie.save);
+	app.delete('/admin/movie/list', Movie.delete);
 
 
 	// 用户	
 	app.post('/user/signup', User.signup);
 	app.post('/user/signin', User.signin);
 	app.get('/user/logout', User.logout);
+	app.get('/admin/user/list', User.signinRequired, User.adminRoleRequired, User.list);
 	app.get('/signup', User.showSignup);
 	app.get('/signin', User.showSignin);	
 

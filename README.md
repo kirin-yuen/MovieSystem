@@ -13,7 +13,7 @@
 * 第一版：伪数据版本
 * 第二版：使用Mongoose工具加入数据库操作
 * 第三版：即将继续该教程的第二期进行功能完善
-    * 开发用户的注册登录功能
+    * 开发用户的注册登录功能 (已完成)
     * 开发评论功能
     * 实现电影的分类功能
     * 增强后台功能
@@ -21,26 +21,55 @@
 
 ### 页面构成
 
-目前主要有如下4个页面，对应的路由如下，功能尚未完善因此，因此有需要手动输入下方路由
+路由如下，功能尚未完善因此，因此有需要手动输入下方路由
+
+**后台页面**
+
+* 电影数据录入页 /admin/movie  
+* 电影数据列表页 /admin/movie/list
+* 用户列表页 /admin/user/list
+
+后台管理页由于新增权限控制，前台注册页面无提供role字段的写入操作，因此请使用mongo进行用户权限修改，命令如下：
+```javascript
+    mongo // 进入mongo命令行
+    use imooc
+    db.users.update({name: your_signup_name}, {$set: {role: 20}}) // your_signup_name代表你注册的用户名
+
+```
+
+**前台页面**
+
+* 首页 /
+* 注册页 /signup
+* 登陆页 /signin
 
 
-* 首页，列出所有电影 get / 
-* 电影详情页 get /movie/:id
-* 后台管理页 get /admin/movie
-* 后台列表页 get /admin/list
 
 
 ### 安装
+---
 ```javascript
     npm install 
     bower install
 ```
 
 
-### 提供三条所需录入的测试数据，使用端口3000，可先使用路由/admin/movie进入进行数据录入
+### 运行
+---
+安装完成后可输入如下命令启动服务器
+```javascript
+    node server    
+```
+
+可使用grunt工具启动服务器
+```javascript
+    grunt
+```
 
 
-
+### 数据
+---
+提供三条所需录入的测试数据，使用端口3000，可先使用路由/admin/movie进入进行数据录入
 ```
     美国队长3
 
