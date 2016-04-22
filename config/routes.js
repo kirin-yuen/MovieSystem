@@ -1,6 +1,8 @@
 var Movie = require('../app/controllers/movie.js');
 var Index = require('../app/controllers/index.js');
 var User = require('../app/controllers/user.js');
+var Comment = require('../app/controllers/comment.js');
+var Category = require('../app/controllers/category.js');
 
 
 module.exports = function(app){
@@ -36,4 +38,15 @@ module.exports = function(app){
 	app.get('/signup', User.showSignup);
 	app.get('/signin', User.showSignin);	
 
-}
+
+	// 评论
+	app.post('/user/comment', User.signinRequired, Comment.save);
+
+	// 分类
+	app.get('/admin/category/new', User.signinRequired, User.adminRoleRequired, Category.new);
+	app.post('/admin/category', User.signinRequired, User.adminRoleRequired, Category.save);
+	app.get('/admin/category/list', User.signinRequired, User.adminRoleRequired, Category.list);
+
+	// 分页查询
+	app.get('/results', Index.search)
+};

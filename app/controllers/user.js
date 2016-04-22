@@ -31,7 +31,6 @@ exports.signin = function(req, res) {
 		if(err) console.error(err);
 		
 		if(!user) {
-			console.log('user is not exist');
 			return res.redirect('/signup');
 		} 
 
@@ -42,11 +41,10 @@ exports.signin = function(req, res) {
 			if(isMatch){
 				// 设置session
 				req.session.user = user;
-				console.log('is match!');
+
 				res.redirect('/');
 			} else{
 
-				console.log('not match!');
 				res.redirect('/signin');
 			}
 		});
@@ -98,11 +96,10 @@ exports.signinRequired = function(req, res, next) {
 	var user = req.session.user;
 
 	if(!user) {
-		console.log('=====user not exist');
+
 		return res.redirect('/signin');		
 	}
 
-	console.log('=====user exist');
 	next();
 };
 
@@ -113,10 +110,9 @@ exports.adminRoleRequired = function(req, res, next) {
 	var user = req.session.user;
 
 	if(user.role < 10) {		
-		console.log('=====user role < 10');
+
 		return res.redirect('/');
 	} 
 
-	console.log('=====user role > 10');
 	next();
 };

@@ -1,4 +1,6 @@
 var Movie = require('../models/movie');
+var Comment = require('../models/comment');
+var Category = require('../models/category');
 var _ = require('underscore');
 
 // 电影详情页
@@ -7,28 +9,34 @@ exports.detail = function (req, res) {
 	var id = req.params['id'];
 
 	Movie.findById(id, function(err, movie){
-		res.render('pages/detail', {
-			title : movie.title + '详情页',
-			movie : movie
-		});
+
+		// 通过movie.id查询comment中对应的记录，并且将返回结果comments加入到视图中
+		Comment
+		.find({movie: id})
+		// 通过populate来查询from字段中ref到User模式对应的name字段,填充到comments中
+		.populate('from', 'name')
+		// 通过populate来查询reply.from和reply.to字段中的ref到User模式对应的name字段,填充到comments中
+		.populate('reply.from reply.to', 'name')
+		.exec(function(err, comments){
+						
+			res.render('pages/detail', {
+				title : movie.title + '详情页',
+				movie : movie,
+				comments : comments
+			});
+		});		
 	});	
 };
 
 // 后台创建页
 exports.create = function(req, res){
-	res.render('pages/admin', {
-		title : '后台管理页',
-		movie : {
-			_id:'',
-			doctor:'',
-			country:'',
-			title:'',
-			year:'',
-			poster:'',
-			language:'',
-			flash:'',
-			summary:''
-		}
+
+	Category.find({}, function(err, categories){
+		res.render('pages/admin', {
+			title : '后台管理页',
+			categories : categories,
+			movie : {}
+		});
 	});
 };
 
@@ -49,11 +57,39 @@ exports.update = function(req, res){
 	var id = req.params['id'];
 
 	if(id){
+		// Movie.find({_id : id})
+		// 	 .populate('category', 'name')
+		// 	 .exec(function(err, movie){
+		// 			if(err) console.log(err);
+					
+		// 			console.log(movie[0].category.name)
+					
+		// 			Category.find(function(err, categories){
+		// 				if(err) console.log(err);
+
+		// 				res.render('pages/admin', {
+		// 					title : '后台更新页',
+		// 					movie : movie,
+		// 					categories : categories
+		// 				});
+
+		// 			});
+		// 	 })
+
 		Movie.findById(id , function(err, movie){
-			res.render('pages/admin', {
-				title : '后台更新页',
-				movie : movie
-			})
+			if(err) console.log(err);
+			
+			Category.find(function(err, categories){
+				if(err) console.log(err);
+
+				res.render('pages/admin', {
+					title : '后台更新页',
+					movie : movie,
+					categories : categories
+				});
+
+			});
+
 		});
 	}
 };
@@ -65,8 +101,10 @@ exports.save = function(req, res){
 	// 使用body-parser后，将body后的内容转换成一个对象
 	var moviePost = req.body.movie;
 	var _movie;
+
+			console.log(moviePost)
 	// 判断从后台录入页post过来数据是新增的还是更新
-	if(id !== ''){
+	if(id){
 		// 更新：如果已经在数据库中存储过
 		Movie.findById(id , function(err, movie){
 			if(err) console.error(err);
@@ -85,22 +123,49 @@ exports.save = function(req, res){
 		});
 	} else {
 		// 新增：如果Post过来的id不存在，则新建数据
-		_movie = new Movie({
-			doctor : moviePost.doctor,
-			title : moviePost.title,
-			country : moviePost.country,
-			language : moviePost.language,
-			year : moviePost.year,
-			poster : moviePost.poster,
-			summary : moviePost.summary,
-			flash : moviePost.flash,
-		});
+		_movie = new Movie(moviePost);
+
+		var categoryId = moviePost.category;
+		var categoryName = moviePost.categoryName;
 
 		_movie.save(function(err, movie){
-			console.log(movie)
-				if(err) console.error(err);
-				// 保存成功后跳转到更新后详情页面
-				res.redirect('/movie/' + movie._id);
+			if(err) console.error(err);
+
+			if(categoryId) {
+				Category.findById(_movie.category, function(err, category){
+					if(err) console.error(err);
+
+					// category同时保存点电影的ID
+					category.movies.push(_movie._id);
+
+					category.save(function(err, category){
+						if(err) console.error(err);
+
+
+						// 保存成功后跳转到更新后详情页面
+						res.redirect('/movie/' + movie._id);
+
+					})
+				});
+			} else if(categoryName) {
+				var category = new Category({
+					name: categoryName,
+					movies: [movie._id]
+				});
+
+				category.save(function(err, category){
+					if(err) console.error(err);
+					movie.category = category._id;
+					movie.save(function(err, movie){
+						// 保存成功后跳转到更新后详情页面
+						res.redirect('/movie/' + movie._id);
+					});
+
+				});
+			}
+
+			
+
 		});
 	}
 };

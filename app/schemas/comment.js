@@ -1,20 +1,31 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+
 var ObjectId = Schema.Types.ObjectId
+
 // 创建一个Schema
-var MovieSchema = new mongoose.Schema({
-	doctor : String,
-	title : String,
-	language : String,
-	country : String,
-	summary : String,
-	flash : String,
-	poster : String,
-	year : String,
-	category : {
-		type : ObjectId,
-		ref : 'Category'
+var CommentSchema = new Schema({
+	movie : {
+		type: ObjectId, // 字段类型ObjectID
+		ref : 'Movie' // 指向数据模型Movie
+	}, 
+	from : {
+		type: ObjectId,
+		ref : 'User'
 	},
+	// reply里放主评论下有关联的子评论
+	reply : [{
+		from : {
+			type: ObjectId,
+			ref : 'User'
+		},
+		to : {
+			type: ObjectId,
+			ref : 'User'
+		},
+		content : String
+	}],
+	content: String,
 	// meta是录入数据时间的记录
 	meta : {
 		createAt : {
@@ -29,7 +40,7 @@ var MovieSchema = new mongoose.Schema({
 });
 
 // pre方法：每次save数据之前都会调用这个方法
-MovieSchema.pre('save', function(next){
+CommentSchema.pre('save', function(next){
 	
 	// 判断数据是否新加的
 	if(this.isNew) {
@@ -42,7 +53,7 @@ MovieSchema.pre('save', function(next){
 });
 
 // 静态方法不会直接与数据库交互，只有经过Model编译并实例化，才具有此方法
-MovieSchema.statics = {
+CommentSchema.statics = {
 	// fetch 取出目前数据库的所有数据
 	fetch : function(cb) {
 		// 按sort更新时间排序,然后执行回调方法
@@ -55,4 +66,4 @@ MovieSchema.statics = {
 };
 
 // 将模式导出
-module.exports = MovieSchema
+module.exports = CommentSchema
