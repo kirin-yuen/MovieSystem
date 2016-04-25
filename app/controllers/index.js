@@ -16,35 +16,57 @@ exports.index = function(req, res) {
 
 };
 
-
-exports.search = function(req, res) {	
+// 分类页与查询功能
+exports.search = function(req, res) {
 	var catId = req.query.cat;
-	var page = parseInt(req.query.p);
+	var q = req.query.q;
+	var page = parseInt(req.query.p) || 0;
 	var count = 3;
 	var index = page * count;
 
-	Category.find({_id: catId})	
-			.populate({path: 'movies'})
-			.exec(function(err, categories){
-				if(err) console.error(err);
+	if(catId){
+		Category.find({_id: catId})	
+				.populate({path: 'movies'})
+				.exec(function(err, categories){
+					if(err) console.error(err);
 
-				var category = categories[0] || {};
+					var category = categories[0] || {};
 
-				var movies = category.movies || [];
-				var results = movies.slice(index, index + count);
-				console.log('==========movies')
-				console.log(movies.length);
-				console.log('==========results')
-				console.log(results.length);
+					var movies = category.movies || [];
+					var results = movies.slice(index, index + count);
 
-				res.render('pages/results', {
-					title : '结果列表页',
-					keyword : category.name,
-					currentPage: (page + 1),
-					query: 'cat=' + catId,
-					totalPage : Math.ceil(movies.length / count),
-					movies : results
-				});
+					res.render('pages/results', {
+						title : '结果列表页',
+						keyword : category.name,
+						currentPage: (page + 1),
+						query: 'cat=' + catId,
+						totalPage : Math.ceil(movies.length / count),
+						movies : results
+					});
+				});		
+	}
+
+	if(q){
+		// 加入正则表达式模拟模糊查询
+		Movie.find({title : new RegExp(q + '.*')}, function(err, movies){
+			if(err) console.error(err);
+
+
+			var results = movies.slice(index, index + count);
+
+			res.render('pages/results', {
+				title : '结果列表页',
+				keyword : q,
+				currentPage: (page + 1),
+				query: 'q=' + q,
+				totalPage : Math.ceil(movies.length / count),
+				movies : results
 			});
+
+
+		});
+
+	}
+
 
 };

@@ -2,11 +2,18 @@ var Movie = require('../models/movie');
 var Comment = require('../models/comment');
 var Category = require('../models/category');
 var _ = require('underscore');
+var fs = require('fs');
+var path = require('path');
 
 // 电影详情页
 exports.detail = function (req, res) {
 
 	var id = req.params['id'];
+
+	// update pv, $inc 自增1
+	Movie.update({_id : id} , {$inc : { pv : 1}}, function(err){
+		if(err) console.error(err);
+	});
 
 	Movie.findById(id, function(err, movie){
 
@@ -42,14 +49,17 @@ exports.create = function(req, res){
 
 // 后台列表页
 exports.list = function(req, res){
-	Movie.fetch(function(err, movies){
-		if(err) console.log(err);
 
-		res.render('pages/list', {
-			title: '列表页',
-			movies: movies
-		});
-	});	
+	Movie.find({})
+		.populate('category', 'name')
+		.exec(function(err, movies){
+			if(err) console.log(err);
+
+			res.render('pages/list', {
+				title: '列表页',
+				movies: movies
+			});
+		});	
 };
 
 // 更新数据
@@ -57,24 +67,6 @@ exports.update = function(req, res){
 	var id = req.params['id'];
 
 	if(id){
-		// Movie.find({_id : id})
-		// 	 .populate('category', 'name')
-		// 	 .exec(function(err, movie){
-		// 			if(err) console.log(err);
-					
-		// 			console.log(movie[0].category.name)
-					
-		// 			Category.find(function(err, categories){
-		// 				if(err) console.log(err);
-
-		// 				res.render('pages/admin', {
-		// 					title : '后台更新页',
-		// 					movie : movie,
-		// 					categories : categories
-		// 				});
-
-		// 			});
-		// 	 })
 
 		Movie.findById(id , function(err, movie){
 			if(err) console.log(err);
@@ -102,7 +94,11 @@ exports.save = function(req, res){
 	var moviePost = req.body.movie;
 	var _movie;
 
-			console.log(moviePost)
+	// 在savePoster中成功写入文件后挂载到req上的poster
+	if(req.poster){
+		moviePost.poster = req.poster;
+	}
+
 	// 判断从后台录入页post过来数据是新增的还是更新
 	if(id){
 		// 更新：如果已经在数据库中存储过
@@ -182,4 +178,42 @@ exports.delete = function(req, res){
 				})
 			})
 		}
+};
+
+
+// 处理文件上传的中间件savePoster
+exports.savePoster = function(req, res, next){
+	// 通过files数组获取文件内容
+	console.log(req.files)
+	var posterData = req.files.uploadPoster;
+
+	console.log(posterData);
+	console.log('====dirname' + __dirname);
+	console.log('====path' + path);
+
+	var filePath = posterData.path;
+	var originalFilename = posterData.originalFilename;
+
+	if(originalFilename){
+
+		fs.readFile(filePath, function(err, data){
+			var timestamp = Date.now();
+			var type = posterData.type.split('/')[1];
+			// 新保存的文件名
+			var posterNewName = timestamp + '.' + type;
+			var newPath = path.join(__dirname, '../..', '/public/upload/' + posterNewName);
+
+			fs.writeFile(newPath, data, function(err){
+				if(err) console.error(err);
+				
+				req.poster = posterNewName;
+
+				next();
+			});
+		})
+	}
+	else {
+		next();
+	}
+
 };

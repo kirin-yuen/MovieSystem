@@ -35,6 +35,9 @@ app.use(session({
 	})
 }));
 
+// express4弃用app.use(express.multipart);
+app.use(require('connect-multiparty')());
+
 // 将moment添加到locals中，让jade模板能直接使用
 app.locals.moment = require('moment');
 

@@ -26,7 +26,8 @@ module.exports = function(app){
 	// 加入中间件User.signinRequired, User.adminRoleRequired,，路由方法会按顺序跑每一个中间件
 	app.get('/admin/movie/list', User.signinRequired, User.adminRoleRequired, Movie.list);
 	app.get('/admin/movie/update/:id', User.signinRequired, User.adminRoleRequired, Movie.update);
-	app.post('/admin/movie/new', User.signinRequired, User.adminRoleRequired, Movie.save);
+	// 增加一个处理文件上传的中间件savePoster
+	app.post('/admin/movie/new', User.signinRequired, User.adminRoleRequired, Movie.savePoster, Movie.save);
 	app.delete('/admin/movie/list', Movie.delete);
 
 
